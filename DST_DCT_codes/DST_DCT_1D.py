@@ -8,7 +8,6 @@ from qiskit.circuit.library import QFT, UnitaryGate
 from scipy.fft import dct, dst, fft, fftfreq, ifft
 
 def safe_norm(x):
-    """||x||_2 renvoyée comme scalaire NumPy, sans cast Python ni or/and."""
     return np.linalg.norm(np.asarray(x).ravel())
 
 def normalize(v, eps=1e-15):
@@ -36,8 +35,7 @@ if BCs == 'dirichlet':
     elif function == 'Heaviside':
         f_x_raw = 2*np.heaviside(x-0.5, 0.5) - 1
         x_real  = np.where(x<=0.5, -0.5*x**2 + 0.75*x, 0.5*x**2 - 0.25*x + 0.25)
-    else:
-        raise ValueError("Unsupported function for Dirichlet.")
+        
 elif BCs == 'neumann':
     if function == 'cos':
         f_x_raw = np.cos(2*np.pi*x)
@@ -45,10 +43,6 @@ elif BCs == 'neumann':
     elif function == 'linear':
         f_x_raw = 10*x - 5
         x_real  = 5/3*x**3 - 5/2*x**2 + 5/12
-    else:
-        raise ValueError("Unsupported function for Neumann.")
-else:
-    raise ValueError("BCs must be 'neumann' or 'dirichlet'.")
 
 # ===== EMBEDING ======
 f_x  = normalize(f_x_raw)
@@ -159,11 +153,6 @@ else :
 
 # ===== FILTER ======
 def bandpass_first_peak(x, dx, width=0.3, oversample=20, kmin=1, rel_floor=1e-6):
-    """
-    Band-pass autour du PREMIER pic non nul (fondamental), pas du plus fort.
-    kmin=1 saute le DC; rel_floor évite des micro-pics de bruit.
-    Retourne (signal_filtré, f0_estime).
-    """
     L = oversample * len(x)
     X = fft(x - x.mean(), n=L)
     f = fftfreq(L, dx)
@@ -181,11 +170,10 @@ def bandpass_first_peak(x, dx, width=0.3, oversample=20, kmin=1, rel_floor=1e-6)
         if Apos[k] > Apos[k-1] and Apos[k] >= Apos[k+1] and Apos[k] >= rel_floor * Amax:
             k0 = k
             break
-    if k0 is None:  # fallback
+    if k0 is None:  
         idx = np.where(Apos >= rel_floor * Amax)[0]
         k0 = int(idx[0]) if idx.size else int(np.argmax(Apos))
 
-    # interpolation quadratique (optionnelle)
     if 1 <= k0 < len(Apos) - 1:
         a, b, c = Apos[k0-1], Apos[k0], Apos[k0+1]
         denom = (a - 2*b + c)
