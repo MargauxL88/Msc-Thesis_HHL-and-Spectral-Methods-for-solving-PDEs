@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# ====== Construction du système 1D (Neumann homogène) ======
 def build_neumann_1d(N_pts=18, x_inf=0.0, x_sup=1.0):
 
     dx = (x_sup - x_inf) / (N_pts - 1)
